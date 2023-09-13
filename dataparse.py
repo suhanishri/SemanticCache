@@ -18,7 +18,7 @@ os.mkdir(OUTPUT)
 def upload(q, hdata):
     url = f"http://{HAYSTACK_IP}:8000/file-upload"
 
-    payload = {'meta': {"q":q, "id": str(uuid.uuid4())}}
+    payload = {'meta': {"q":q, "intent": "cache", "id": str(uuid.uuid4())}}
 
     fname = str(uuid.uuid4())
     with open(fname, 'w') as f:

@@ -24,9 +24,10 @@ def upload(q, hdata):
     with open(fname, 'w') as f:
         f.write(hdata)
 
-    files=[
-        ('files',(fname + '.json', open(fname,'rb'),'application/json'))
-    ]
+    # files=[
+    #     ('files',(fname + '.json', open(fname,'rb'),'application/json'))
+    # ]
+    files = { 'files': open(fname,'rb') }
     headers = {
         'Accept': 'application/json',
         'Content-Type': 'multipart/form-data'

@@ -29,8 +29,7 @@ def upload(q, hdata):
     # ]
     files = { 'files': open(fname,'rb') }
     headers = {
-        'Accept': 'application/json',
-        'Content-Type': 'multipart/form-data'
+        'Accept': 'application/json'
     }
 
     response = requests.request("POST", url, headers=headers, data=payload, files=files)

@@ -39,7 +39,13 @@ def getdoc(metaid):
     response = requests.request("POST", url, headers=headers, data=payload)
     print('\t', f"getdoc(metaid={metaid})", response, response.json())
     print()
-    return response.json()
+
+    if len(response.json()) == 0:
+        return []
+    content = str(response.json()[0]["content"])
+    content = content.split(SEP)[1]
+
+    return [content]
 
 def query(q):
     url = f"http://{HAYSTACK_IP}:8000/query"
@@ -52,3 +58,11 @@ def query(q):
     print('\t', f"query(q={q})", response, response.json())
     print()
     return response.json()
+
+def getmetaid(ret):
+    docs = ret["documents"]
+    if len(docs) <= 0:
+        print("No docs in response")
+        return None
+    metaid = docs[0]["meta"]["id"]
+    return metaid

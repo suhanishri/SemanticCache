@@ -264,7 +264,7 @@
                 "AZURE_COSMOSDB_DATABASE": "[variables('cosmosdb_database_name')]",
                 "AZURE_COSMOSDB_CONVERSATIONS_CONTAINER": "[variables('cosmosdb_container_name')]",
                 "AZURE_OPENAI_STREAM": "false",
-                "AZ_SEMANTIC_CACHE_THRESHOLD": "0.5015"
+                "AZ_SEMANTIC_CACHE_THRESHOLD": "0.50152"
             }
         },
         {

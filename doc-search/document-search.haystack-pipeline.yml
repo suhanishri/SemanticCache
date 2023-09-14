@@ -4,13 +4,13 @@ components:
   - name: DocumentStore
     type: ElasticsearchDocumentStore
     params:
-      embedding_dim: 384
+      embedding_dim: 768
   - name: Retriever
     type: EmbeddingRetriever
     params:
       document_store: DocumentStore
       top_k: 10 
-      embedding_model: sentence-transformers/all-MiniLM-L6-v2
+      embedding_model: sentence-transformers/all-mpnet-base-v2
   - name: FileTypeClassifier
     type: FileTypeClassifier
   - name: TextFileConverter

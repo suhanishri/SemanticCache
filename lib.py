@@ -66,3 +66,11 @@ def getmetaid(ret):
         return None
     metaid = docs[0]["meta"]["id"]
     return metaid
+
+def getconfidence(ret):
+    docs = ret["documents"]
+    if len(docs) <= 0:
+        print("No docs in response")
+        return -1
+    confidence = docs[0]["score"]
+    return confidence

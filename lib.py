@@ -32,7 +32,8 @@ def upload(q, hdata):
 def getdoc(metaid):
     url = f"http://{HAYSTACK_IP}:8000/documents/get_by_filters"
     headers = {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'content-type': 'application/json'
     }
     payload = {"filters": { "id": metaid }}
     response = requests.request("POST", url, headers=headers, data=payload)
@@ -43,7 +44,8 @@ def getdoc(metaid):
 def query(q):
     url = f"http://{HAYSTACK_IP}:8000/query"
     headers = {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'content-type': 'application/json'
     }
     payload = {"query": q }
     response = requests.request("POST", url, headers=headers, data=payload)

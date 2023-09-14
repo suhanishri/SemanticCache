@@ -35,7 +35,7 @@ def getdoc(metaid):
         'Accept': 'application/json',
         'content-type': 'application/json'
     }
-    payload = {"filters": { "id": metaid }}
+    payload = json.dumps({"filters": { "id": metaid }})
     response = requests.request("POST", url, headers=headers, data=payload)
     print('\t', f"getdoc(metaid={metaid})", response, response.json())
     print()
@@ -47,7 +47,7 @@ def query(q):
         'Accept': 'application/json',
         'content-type': 'application/json'
     }
-    payload = {"query": q }
+    payload = json.dumps({"query": q })
     response = requests.request("POST", url, headers=headers, data=payload)
     print('\t', f"query(q={q})", response, response.json())
     print()

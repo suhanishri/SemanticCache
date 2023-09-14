@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "webAppName": {
-            "value": "spr-webapp-002"
+            "value": "spr-webapp-003"
         },
         "location": {
             "value": "East US"
@@ -54,14 +54,14 @@
             "value": "You are an AI assistant that helps people find information."
         },
         "repoUrl": {
-            "value": "https://github.com/microsoft/sample-app-aoai-chatGPT.git"
+            "value": "https://github.com/suhanishri/semanticcache-aoai-chatGPT.git"
         },
         "sku": {
             "value": "S2"
         },
         "resourceTags": {
             "value": {
-                "ProjectType": "aoai-your-data-service"
+                "ProjectType": "semanticcache-aoai-your-data-service"
             }
         },
         "authClientId": {

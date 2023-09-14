@@ -1,0 +1,420 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webAppName": {
+            "defaultValue": "[format('webApp-{0}', uniqueString(resourceGroup().id))]",
+            "minLength": 2,
+            "type": "String",
+            "metadata": {
+                "description": "Web app name."
+            }
+        },
+        "location": {
+            "defaultValue": "[resourceGroup().location]",
+            "type": "String",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "linuxFxVersion": {
+            "defaultValue": "PYTHON|3.11",
+            "type": "String",
+            "metadata": {
+                "description": "The Runtime stack of current web app"
+            }
+        },
+        "useSemanticSearch": {
+            "defaultValue": false,
+            "type": "Bool",
+            "metadata": {
+                "description": "Whether to use semantic search or not"
+            }
+        },
+        "searchIndexPrechunked": {
+            "defaultValue": true,
+            "type": "Bool",
+            "metadata": {
+                "description": "Whether the search index was prechunked."
+            }
+        },
+        "searchTopK": {
+            "defaultValue": 5,
+            "type": "Int",
+            "metadata": {
+                "description": "How many documents to return in the search results."
+            }
+        },
+        "searchEnableInDomain": {
+            "defaultValue": false,
+            "type": "Bool",
+            "metadata": {
+                "description": "Whether to limit answers to questions in domain of the search results."
+            }
+        },
+        "azureOpenAIResource": {
+            "type": "String",
+            "metadata": {
+                "description": "Azure OpenAI resource name"
+            }
+        },
+        "azureOpenAIModelDeployment": {
+            "type": "String",
+            "metadata": {
+                "description": "Azure OpenAI Model Deployment name"
+            }
+        },
+        "azureOpenAIModelName": {
+            "type": "String",
+            "metadata": {
+                "description": "Azure OpenAI Model Name, e.g. 'gpt-35-turbo' or 'gpt-4'"
+            }
+        },
+        "azureOpenAIEndpoint": {
+            "type": "String",
+            "metadata": {
+                "description": "Azure OpenAI API endpoint"
+            }
+        },
+        "azureOpenAIKey": {
+            "type": "SecureString",
+            "metadata": {
+                "description": "Azure OpenAI API key"
+            }
+        },
+        "azureOpenAIEmbeddingKey": {
+            "type": "SecureString",
+            "metadata": {
+                "description": "Azure OpenAI Embedding API key"
+            }
+        },
+        "azureOpenAITemperature": {
+            "type": "String",
+            "metadata": {
+                "description": "Temperature parameter for Azure OpenAI API"
+            }
+        },
+        "azureOpenAITopP": {
+            "type": "String",
+            "metadata": {
+                "description": "top_p parameter for Azure OpenAI API"
+            }
+        },
+        "azureOpenAIMaxTokens": {
+            "type": "Int",
+            "metadata": {
+                "description": "Maximum number of tokens to return from Azure OpenAI API"
+            }
+        },
+        "azureOpenAISystemMessage": {
+            "type": "String",
+            "metadata": {
+                "description": "System message parameter for Azure OpenAI API"
+            }
+        },
+        "repoUrl": {
+            "type": "String",
+            "metadata": {
+                "description": "Public github repo containing web app code."
+            }
+        },
+        "sku": {
+            "defaultValue": "B1",
+            "type": "String",
+            "metadata": {
+                "description": "SKU for the App Service Plan"
+            }
+        },
+        "resourceTags": {
+            "defaultValue": {
+                "ProjectType": "undefined"
+            },
+            "type": "Object"
+        },
+        "authClientId": {
+            "type": "String",
+            "metadata": {
+                "description": "App registration client id for the web app"
+            }
+        },
+        "authClientSecret": {
+            "type": "SecureString",
+            "metadata": {
+                "description": "App registration client secret for the web app"
+            }
+        },
+        "enableChatHistory": {
+            "defaultValue": false,
+            "type": "Bool",
+            "metadata": {
+                "description": "Whether to enable chat history or not"
+            }
+        }
+    },
+    "variables": {
+        "appServicePlanPortalName": "[format('asp-{0}', parameters('webAppName'))]",
+        "cosmosdb_account_name": "[toLower(format('db-{0}', parameters('webAppName')))]",
+        "cosmosdb_database_name": "db_conversation_history",
+        "cosmosdb_container_name": "conversations",
+        "roleDefinitionId": "00000000-0000-0000-0000-000000000002",
+        "roleAssignmentId": "[guid(variables('roleDefinitionId'), parameters('webAppName'), resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name')))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2022-09-01",
+            "name": "[variables('appServicePlanPortalName')]",
+            "location": "[parameters('location')]",
+            "tags": "[parameters('resourceTags')]",
+            "sku": {
+                "name": "[parameters('sku')]"
+            },
+            "kind": "linux",
+            "properties": {
+                "perSiteScaling": false,
+                "elasticScaleEnabled": false,
+                "maximumElasticWorkerCount": 1,
+                "isSpot": false,
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0,
+                "zoneRedundant": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2021-02-01",
+            "name": "[parameters('webAppName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanPortalName'))]"
+            ],
+            "tags": "[parameters('resourceTags')]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "httpsOnly": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanPortalName'))]",
+                "siteConfig": {
+                    "alwaysOn": "[not(equals(parameters('sku'), 'F1'))]",
+                    "linuxFxVersion": "[parameters('linuxFxVersion')]",
+                    "minTlsVersion": "1.2",
+                    "ftpsState": "FtpsOnly",
+                    "defaultDocuments": [
+                        "Default.htm",
+                        "Default.html",
+                        "Default.asp",
+                        "index.htm",
+                        "index.html",
+                        "iisstart.htm",
+                        "default.aspx",
+                        "index.php",
+                        "hostingstart.html"
+                    ],
+                    "virtualApplications": [
+                        {
+                            "virtualPath": "/",
+                            "physicalPath": "site\\wwwroot",
+                            "preloadEnabled": false
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2021-02-01",
+            "name": "[format('{0}/{1}', parameters('webAppName'), 'appsettings')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
+            ],
+            "properties": {
+                "AZURE_SEARCH_SERVICE": "",
+                "AZURE_SEARCH_INDEX": "",
+                "AZURE_SEARCH_KEY": "",
+                "AZURE_SEARCH_USE_SEMANTIC_SEARCH": "[parameters('useSemanticSearch')]",
+                "AZURE_SEARCH_TOP_K": "[parameters('searchTopK')]",
+                "AZURE_SEARCH_ENABLE_IN_DOMAIN": "[parameters('searchEnableInDomain')]",
+                "AZURE_OPENAI_TEMPERATURE": "[parameters('azureOpenAITemperature')]",
+                "AZURE_OPENAI_TOP_P": "[parameters('azureOpenAITopP')]",
+                "AZURE_OPENAI_MAX_TOKENS": "[parameters('azureOpenAIMaxTokens')]",
+                "AZURE_OPENAI_STOP_SEQUENCE": "",
+                "AZURE_OPENAI_RESOURCE": "[parameters('azureOpenAIResource')]",
+                "AZURE_OPENAI_MODEL": "[parameters('azureOpenAIModelDeployment')]",
+                "AZURE_OPENAI_MODEL_NAME": "[parameters('azureOpenAIModelName')]",
+                "AZURE_OPENAI_ENDPOINT": "[parameters('azureOpenAIEndpoint')]",
+                "AZURE_OPENAI_KEY": "[parameters('azureOpenAIKey')]",
+                "AZURE_OPENAI_SYSTEM_MESSAGE": "[parameters('azureOpenAISystemMessage')]",
+                "AZURE_OPENAI_EMBEDDING_ENDPOINT": "",
+                "AZURE_OPENAI_EMBEDDING_KEY": "[parameters('azureOpenAIEmbeddingKey')]",
+                "SCM_DO_BUILD_DURING_DEPLOYMENT": "true",
+                "AZURE_SEARCH_SEMANTIC_SEARCH_CONFIG": "",
+                "AZURE_SEARCH_CONTENT_COLUMNS": "",
+                "AZURE_SEARCH_FILENAME_COLUMN": "",
+                "AZURE_SEARCH_TITLE_COLUMN": "",
+                "AZURE_SEARCH_URL_COLUMN": "",
+                "AZURE_SEARCH_VECTOR_COLUMNS": "",
+                "AZURE_SEARCH_PERMITTED_GROUPS_COLUMN": "",
+                "AZURE_SEARCH_QUERY_TYPE": "",
+                "AUTH_CLIENT_SECRET": "[parameters('authClientSecret')]",
+                "AZURE_COSMOSDB_ACCOUNT": "[if(parameters('enableChatHistory'), variables('cosmosdb_account_name'), '')]",
+                "AZURE_COSMOSDB_DATABASE": "[variables('cosmosdb_database_name')]",
+                "AZURE_COSMOSDB_CONVERSATIONS_CONTAINER": "[variables('cosmosdb_container_name')]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/sourcecontrols",
+            "apiVersion": "2021-02-01",
+            "name": "[format('{0}/{1}', parameters('webAppName'), 'web')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]",
+                "[resourceId('Microsoft.Web/sites/config', parameters('webAppName'), 'appsettings')]"
+            ],
+            "properties": {
+                "repoUrl": "[parameters('repoUrl')]",
+                "branch": "main",
+                "isManualIntegration": true
+            },
+            "condition": "[contains(parameters('repoUrl'), 'http')]"
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2021-02-01",
+            "name": "[format('{0}/{1}', parameters('webAppName'), 'authsettingsv2')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]"
+            ],
+            "properties": {
+                "globalValidation": {
+                    "redirectToProvider": "azureactivedirectory",
+                    "requireAuthentication": true,
+                    "unauthenticatedClientAction": "RedirectToLoginPage"
+                },
+                "identityProviders": {
+                    "azureActiveDirectory": {
+                        "enabled": true,
+                        "registration": {
+                            "clientId": "[parameters('authClientId')]",
+                            "clientSecretSettingName": "AUTH_CLIENT_SECRET",
+                            "openIdIssuer": "[concat('https://login.microsoftonline.com/', subscription().tenantId, '/v2.0')]"
+                        },
+                        "validation": {
+                            "jwtClaimChecks": {},
+                            "defaultAuthorizationPolicy": {
+                                "allowedPrincipals": {},
+                                "allowedApplications": []
+                            }
+                        },
+                        "login": {
+                            "loginParameters": [
+                                "response_type=code id_token",
+                                "scope=openid offline_access profile https://graph.microsoft.com/User.Read https://graph.microsoft.com/User.ReadBasic.All"
+                            ],
+                            "disableWWWAuthenticate": false
+                        }
+                    }
+                },
+                "login": {
+                    "tokenStore": {
+                        "enabled": true
+                    }
+                }
+            },
+            "condition": "[not(empty(parameters('authClientId')))]"
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts",
+            "apiVersion": "2023-04-15",
+            "name": "[variables('cosmosdb_account_name')]",
+            "location": "[parameters('location')]",
+            "tags": "[parameters('resourceTags')]",
+            "kind": "GlobalDocumentDB",
+            "properties": {
+                "consistencyPolicy": {
+                    "defaultConsistencyLevel": "Session"
+                },
+                "locations": [
+                    {
+                        "locationName": "[parameters('location')]",
+                        "failoverPriority": 0,
+                        "isZoneRedundant": false
+                    }
+                ],
+                "databaseAccountOfferType": "Standard",
+                "enableAutomaticFailover": false,
+                "enableMultipleWriteLocations": false
+            },
+            "condition": "[parameters('enableChatHistory')]"
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+            "apiVersion": "2023-04-15",
+            "name": "[concat(variables('cosmosdb_account_name'), '/', variables('cosmosdb_database_name'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "[variables('cosmosdb_database_name')]"
+                }
+            },
+            "condition": "[parameters('enableChatHistory')]"
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+            "apiVersion": "2023-04-15",
+            "name": "[concat(variables('cosmosdb_account_name'), '/', variables('cosmosdb_database_name'), '/conversations')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', variables('cosmosdb_account_name'), variables('cosmosdb_database_name'))]",
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name'))]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "conversations",
+                    "indexingPolicy": {
+                        "indexingMode": "consistent",
+                        "automatic": true,
+                        "includedPaths": [
+                            {
+                                "path": "/*"
+                            }
+                        ],
+                        "excludedPaths": [
+                            {
+                                "path": "/\"_etag\"/?"
+                            }
+                        ]
+                    },
+                    "partitionKey": {
+                        "paths": [
+                            "/userId"
+                        ],
+                        "kind": "Hash"
+                    },
+                    "conflictResolutionPolicy": {
+                        "mode": "LastWriterWins",
+                        "conflictResolutionPath": "/_ts"
+                    }
+                }
+            },
+            "condition": "[parameters('enableChatHistory')]"
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments",
+            "apiVersion": "2021-04-15",
+            "name": "[format('{0}/{1}', variables('cosmosdb_account_name'), variables('roleAssignmentId'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name'))]"
+            ],
+            "properties": {
+                "roleDefinitionId": "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions', split(format('{0}/{1}', variables('cosmosdb_account_name'), variables('roleDefinitionId')), '/')[0], split(format('{0}/{1}', variables('cosmosdb_account_name'), variables('roleDefinitionId')), '/')[1])]",
+                "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('webAppName')), '2021-02-01', 'Full').identity.principalId]",
+                "scope": "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('cosmosdb_account_name'))]"
+            },
+            "condition": "[parameters('enableChatHistory')]"
+        }
+    ]
+}

@@ -1,0 +1,77 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webAppName": {
+            "value": "spr-webapp-002"
+        },
+        "location": {
+            "value": "East US"
+        },
+        "linuxFxVersion": {
+            "value": "PYTHON|3.11"
+        },
+        "useSemanticSearch": {
+            "value": false
+        },
+        "searchIndexPrechunked": {
+            "value": true
+        },
+        "searchTopK": {
+            "value": 5
+        },
+        "searchEnableInDomain": {
+            "value": true
+        },
+        "azureOpenAIResource": {
+            "value": "cog-qwl5he3wawxce"
+        },
+        "azureOpenAIModelDeployment": {
+            "value": "chat"
+        },
+        "azureOpenAIModelName": {
+            "value": "gpt-35-turbo"
+        },
+        "azureOpenAIEndpoint": {
+            "value": "https://cog-qwl5he3wawxce.openai.azure.com/"
+        },
+        "azureOpenAIKey": {
+            "value": "d29b57a8de5846fb90fec7bedb92b473"
+        },
+        "azureOpenAIEmbeddingKey": {
+            "value": "d29b57a8de5846fb90fec7bedb92b473"
+        },
+        "azureOpenAITemperature": {
+            "value": "0.7"
+        },
+        "azureOpenAITopP": {
+            "value": "0.95"
+        },
+        "azureOpenAIMaxTokens": {
+            "value": 800
+        },
+        "azureOpenAISystemMessage": {
+            "value": "You are an AI assistant that helps people find information."
+        },
+        "repoUrl": {
+            "value": "https://github.com/microsoft/sample-app-aoai-chatGPT.git"
+        },
+        "sku": {
+            "value": "S2"
+        },
+        "resourceTags": {
+            "value": {
+                "ProjectType": "aoai-your-data-service"
+            }
+        },
+        "authClientId": {
+            "value": "539c99f7-ff9d-4402-8d72-7d25ee5d1318"
+        },
+        "authClientSecret": {
+            "value": "nJq8Q~sjSPFozI3LwcpQIK0I4hHwTuzqgLRAoaa_"
+        },
+        "enableChatHistory": {
+            "value": false
+        }
+    }
+}

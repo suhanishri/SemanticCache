@@ -5,6 +5,7 @@ components:
     type: ElasticsearchDocumentStore
     params:
       embedding_dim: 768
+      similarity: cosine
   - name: Retriever
     type: EmbeddingRetriever
     params:

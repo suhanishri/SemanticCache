@@ -1,7 +1,7 @@
 services:
 
   haystack-api:
-    image: "deepset/haystack:cpu"
+    image: "deepset/haystack:gpu"
     volumes:
       - ./:/opt/pipelines
     ports:

@@ -61,7 +61,7 @@
         },
         "resourceTags": {
             "value": {
-                "ProjectType": "semanticcache-aoai-your-data-service"
+                "ProjectType": "semanticcache-gpu-aoai-your-data-service"
             }
         },
         "authClientId": {

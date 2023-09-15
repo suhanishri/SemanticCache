@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "webAppName": {
-            "value": "spr-webapp-003"
+            "value": "spr-webapp-005"
         },
         "location": {
             "value": "East US"
